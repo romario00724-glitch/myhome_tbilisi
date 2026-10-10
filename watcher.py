@@ -511,12 +511,12 @@ def facts_text(item):
     if clean(item.get("area")):
         facts.append(f"{fmt_area(item['area'])} м²")
     if clean(item.get("room")):
-        facts.append(f"кімнат: {clean(item['room'])}")
+        facts.append(f"комнат: {clean(item['room'])}")
     if clean(item.get("bedroom")):
-        facts.append(f"спалень: {clean(item['bedroom'])}")
+        facts.append(f"спален: {clean(item['bedroom'])}")
     if clean(item.get("floor")):
         total = clean(item.get("total_floors"))
-        facts.append(f"поверх {clean(item['floor'])}" + (f"/{total}" if total else ""))
+        facts.append(f"этаж {clean(item['floor'])}" + (f"/{total}" if total else ""))
     return " · ".join(facts)
 
 
@@ -525,7 +525,7 @@ def listing_time(item):
     created = _parse_time(item.get("created_at") or item.get("create_date"))
     updated = _parse_time(item.get("last_updated"))
     if created and updated and updated.date() != created.date():
-        return f"{created:%d.%m %H:%M}, оновлено {updated:%d.%m %H:%M}"
+        return f"{created:%d.%m %H:%M}, обновлено {updated:%d.%m %H:%M}"
     moment = created or updated
     return moment.strftime("%d.%m %H:%M") if moment else ""
 
@@ -570,7 +570,7 @@ def build_message(item, label, count, max_len=4096):
     def esc(value):
         return html.escape(clean(value), quote=False)
 
-    lines = [f"🏠 <b>{esc(item.get('dynamic_title')) or 'Нове оголошення'}</b>"]
+    lines = [f"🏠 <b>{esc(item.get('dynamic_title')) or 'Новое объявление'}</b>"]
     if price_text(item):
         lines.append(f"💵 {esc(price_text(item))}")
 
@@ -590,7 +590,7 @@ def build_message(item, label, count, max_len=4096):
     if phone:
         who.append(f"📞 {phone}")
     elif "*" in masked:
-        who.append(f"📞 {esc(masked)} (повністю — на сайті)")
+        who.append(f"📞 {esc(masked)} (полностью — на сайте)")
     if who:
         lines.append("👤 " + " · ".join(who))
 
@@ -599,23 +599,23 @@ def build_message(item, label, count, max_len=4096):
 
     agent_text, owner_text = text_signals(plain_text(item.get("comment")))
     if is_site_agent(item):
-        lines.append("⚠️ На myhome.ge автор позначений як агент")
+        lines.append("⚠️ На myhome.ge автор отмечен как агент")
     site = item.get("_site_count")
     if isinstance(site, int):
-        words = plural(site, "оголошення", "оголошення", "оголошень")
+        words = plural(site, "объявление", "объявления", "объявлений")
         if site >= AGENT_THRESHOLD:
-            lines.append(f"⚠️ У автора {site} {words} на myhome.ge — агент або інвестор")
+            lines.append(f"⚠️ У автора {site} {words} на myhome.ge — агент или инвестор")
         else:
             lines.append(f"✅ У автора {site} {words} на myhome.ge")
     if count >= AGENT_THRESHOLD and (not isinstance(site, int) or count > site):
-        words = plural(count, "оголошенні", "оголошеннях", "оголошеннях")
-        lines.append(f"⚠️ Цей автор або телефон уже трапився в {count} {words} — агент або інвестор")
+        words = plural(count, "объявлении", "объявлениях", "объявлениях")
+        lines.append(f"⚠️ Этот автор или телефон уже встречался в {count} {words} — агент или инвестор")
     if agent_text:
-        lines.append("⚠️ В описі згадується агенція або комісія")
+        lines.append("⚠️ В описании упоминается агентство или комиссия")
     elif owner_text:
-        lines.append("✍️ Пише, що без посередників")
+        lines.append("✍️ Пишет, что без посредников")
 
-    link = f'🔗 <a href="{html.escape(listing_url(item))}">Відкрити на myhome.ge</a>'
+    link = f'🔗 <a href="{html.escape(listing_url(item))}">Открыть на myhome.ge</a>'
     message = "\n".join(lines)
     desc = item.get("_ru_comment") or plain_text(item.get("comment"))
     budget = min(400, max_len - visible_len(message) - visible_len(link) - 10)
@@ -628,7 +628,7 @@ def build_message(item, label, count, max_len=4096):
 def print_listing(item, label, count):
     plain = html.unescape(re.sub(r"<[^>]+>", "", build_message(item, label, count)))
     print("-" * 60)
-    print(plain.replace("Відкрити на myhome.ge", listing_url(item)), flush=True)
+    print(plain.replace("Открыть на myhome.ge", listing_url(item)), flush=True)
 
 
 # ─────────────────────────────── Telegram ───────────────────────────────
@@ -877,13 +877,13 @@ def mark_seen(state, listing_id, day):
 def update_fail_streak(state, any_ok):
     if any_ok:
         if state["fail_streak"] >= FAIL_ALERT_AFTER and telegram_ready():
-            send_text("✅ myhome.ge знову віддає дані, моніторинг працює.")
+            send_text("✅ myhome.ge снова отдаёт данные, мониторинг работает.")
         state["fail_streak"] = 0
         return
     state["fail_streak"] += 1
     if state["fail_streak"] == FAIL_ALERT_AFTER and telegram_ready():
-        send_text("⚠️ Кілька перевірок поспіль myhome.ge не віддає дані. Можливо, сайт змінив "
-                  "API або блокує запити — варто глянути лог запусків.")
+        send_text("⚠️ Несколько проверок подряд myhome.ge не отдаёт данные. Возможно, сайт изменил "
+                  "API или блокирует запросы — стоит посмотреть журнал запусков.")
 
 
 # ─────────────────────────────── основна логіка ───────────────────────────────
@@ -931,8 +931,8 @@ def run_once(state):
             state["searches"][key] = day
             log(f"[{label}] перший запуск: запам'ятав {len(found)} оголошень, далі — лише нові")
             if telegram_ready():
-                send_text(f"✅ Стежу за пошуком «{html.escape(label)}». Поточні {len(found)} "
-                          "оголошень запам'ятав — надсилатиму тільки нові.")
+                send_text(f"✅ Слежу за поиском «{html.escape(label)}». Текущие {len(found)} "
+                          "объявлений запомнил — буду присылать только новые.")
             continue
 
         for item in found:
@@ -1090,7 +1090,7 @@ def cmd_chat_id():
     if OPENAI_API_KEY:
         config["openai_key"] = OPENAI_API_KEY
     TELEGRAM_FILE.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
-    send_text("✅ Бот підключено! Сюди приходитимуть нові оголошення від власників з myhome.ge.")
+    send_text("✅ Бот подключён! Сюда будут приходить новые объявления от собственников с myhome.ge.")
     log(f"chat_id {choice} ({chats[choice]}) збережено в telegram.json, у чат надіслано привітання")
     return 0
 
