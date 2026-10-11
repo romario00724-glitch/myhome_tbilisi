@@ -1,0 +1,42 @@
+name: check-price (тимчасова перевірка фільтра ціни)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Чи фільтрує сайт за ціною?
+        # Без секретів: нічого не шле в Telegram і не чіпає state.json. Друкує лише кількості й ціни.
+        run: |
+          python - <<'PY'
+          import time
+          import watcher as w
+          label, url = w.load_searches()[0]
+          for extra in ("", "&currency_id=2&price_from=350", "&currency_id=1&price_from=350",
+                        "&price_from=350", "&currency_id=2&price_from=350&price_to=100000"):
+              try:
+                  items = w.fetch_page(w.search_params(url.replace("&currency_id=1", "") + extra), 1)
+              except Exception as e:
+                  print(f"{extra!r}: помилка {e}"); continue
+              price = lambda i, c: float(w.as_dict(w.as_dict(i.get("price")).get(c)).get("price_total") or 0)
+              usd = [price(i, "2") for i in items]
+              gel = [price(i, "1") for i in items]
+              print(f"{extra!r}: {len(items)} оголошень; $ від {min(usd, default=0):g} до {max(usd, default=0):g}; "
+                    f"₾ від {min(gel, default=0):g}; дешевше $350: {sum(u < 350 for u in usd)}")
+              time.sleep(2)
+          PY
