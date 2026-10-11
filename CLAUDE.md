@@ -32,7 +32,9 @@ CLAUDE.md і `git log` myhome-watcher; читати їх перед тим, як
    `name:` і `concurrency.group` = `myhome_tbilisi` у workflow.
 
 Чим цей репозиторій відрізняється від Батумі — і тільки цим:
-- `searches.txt` — `cities=1` (Тбілісі; у Батумі `cities=15`), підпис «Аренда Тбилиси»;
+- `searches.txt` — `cities=1` (Тбілісі; у Батумі `cities=15`), підпис «Аренда Тбилиси»; ціна від
+  350 $ (`currency_id=2&price_from=350`, 2 — долари; з `currency_id=1` той самий фільтр нічого не відсіяв; перевірено 11.10.2026,
+  рішення користувача — дешевші не надсилати);
 - `watcher.py` — лише рядки з таблиці `REPLACEMENTS` у `sync_from_batumi.py`: назва міста
   (підказка в `search_params`, `TRANSLATE_PROMPT`) і всі тексти для групи російською;
 - `sync_from_batumi.py` — є лише тут;
