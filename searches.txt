@@ -12,3 +12,5 @@
 # Оренда | https://www.myhome.ge/ru/...?deal_types=2&real_estate_types=1&cities=...&owner_type=physical
 
 Аренда Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=1&cities=1&currency_id=2&price_from=350&owner_type=physical
+Аренда коммерции Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=5&cities=1&currency_id=2&price_from=600&owner_type=physical
+Аренда домов Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=2&cities=1&currency_id=2&price_from=1000&owner_type=physical
