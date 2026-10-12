@@ -2,7 +2,7 @@
 
 Кожні ~10 хвилин перевіряє пошук на myhome.ge по **Тбілісі** (лише оголошення від власників) і надсилає в Telegram тільки **нові** оголошення: фото, ціна, район, телефон (якщо є), посилання. Агентів, які прикидаються власниками, позначає ⚠️.
 
-Це близнюк бота для Батумі — [myhome-watcher](https://github.com/romario00724-glitch/myhome-watcher). Код у них однаковий; відрізняються місто в `searches.txt`, назви, будильник, секрети й власна база `state.json`. Боти незалежні: зупинка чи поломка одного не зачіпає іншого.
+Це близнюк бота для Батумі — [myhome_batumi](https://github.com/romario00724-glitch/myhome_batumi). Код у них однаковий; відрізняються місто в `searches.txt`, назви, будильник, секрети й власна база `state.json`. Боти незалежні: зупинка чи поломка одного не зачіпає іншого.
 
 **Усе, що бот пише в групу, — російською** (у групі є учасник, який не знає української): і картки оголошень, і службові повідомлення. Позначки нижче описані українською, у групі вони виглядають так само, лише російською. Журнал запусків і коментарі в коді — українською, як у Батумі. Російські тексти накладає на батумський код скрипт `sync_from_batumi.py`.
 
@@ -105,7 +105,7 @@ cron-job.org ──► GitHub Actions ──► myhome.ge ──► Telegram
 
 ### Як налаштований будильник
 
-Завдання `myhome_tbilisi` на [console.cron-job.org](https://console.cron-job.org/jobs) — таке саме, як `myhome-watcher` для Батумі, відрізняється лише адреса:
+Завдання `myhome_tbilisi` на [console.cron-job.org](https://console.cron-job.org/jobs) — таке саме, як завдання бота Батумі (`myhome_batumi`), відрізняється лише адреса:
 
 | Поле | Значення |
 |---|---|
@@ -117,8 +117,8 @@ cron-job.org ──► GitHub Actions ──► myhome.ge ──► Telegram
 | Заголовок `Authorization` | `Bearer github_pat_…` — ключ доступу GitHub |
 | Заголовок `X-GitHub-Api-Version` | `2022-11-28` |
 
-Ключ — той самий **fine-grained token** GitHub, що й у завдань для Батумі (`myhome-watcher`)
-і ss.ge (`ssge-watcher`): до його доступу просто додано й цей репозиторій. Право в нього одне —
+Ключ — той самий **fine-grained token** GitHub, що й у завдань для Батумі (`myhome_batumi`)
+і ss.ge (`ss.ge_batumi`): до його доступу просто додано й цей репозиторій. Право в нього одне —
 `Actions: Read and write` (плюс обов'язковий `Metadata: Read-only`); коду він не відкриває.
 Змінити доступ чи відкликати: [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens).
 
@@ -134,7 +134,7 @@ cron-job.org ──► GitHub Actions ──► myhome.ge ──► Telegram
 
 Лікується за дві хвилини:
 [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
-→ новий токен, `Only select repositories` → `myhome-watcher`, `ssge-watcher` і `myhome_tbilisi`,
+→ новий токен, `Only select repositories` → `myhome_batumi`, `ss.ge_batumi` і `myhome_tbilisi`,
 право `Actions: Read and write` → підставити його в заголовок `Authorization` **усіх трьох**
 завдань на cron-job.org → **SAVE**.
 
