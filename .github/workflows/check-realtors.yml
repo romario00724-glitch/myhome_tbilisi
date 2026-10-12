@@ -1,0 +1,58 @@
+name: check-realtors (тимчасова перевірка фільтра «не сотрудничаю»)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Скільки справжніх описів myhome фільтр відсіює?
+        # Без секретів: нічого не шле в Telegram і не чіпає state.json.
+        # Друкує лише кількості й короткі збіги фраз (цифри замасковано) — без імен і телефонів.
+        run: |
+          python - <<'PY'
+          import re, time
+          import watcher as w, no_realtors as n
+          label, url = w.load_searches()[0]
+          params = w.search_params(url)
+          items = []
+          for page in range(1, 6):
+              items += w.fetch_page(params, page)
+              time.sleep(1.5)
+          mask = lambda s: re.sub(r"\d", "#", re.sub(r"\s+", " ", s))[:80]
+          refused, coop, georgian, short = 0, 0, 0, 0
+          for it in items:
+              try:
+                  w.enrich_with_details(it)
+              except Exception as e:
+                  print("картка не відкрилась:", type(e).__name__)
+              time.sleep(0.7)
+              text = re.sub(r"\s+", " ", w.plain_text(it.get("comment")))
+              if len(text) < 20:
+                  short += 1
+              if re.search(r"[ა-ჿ]", text):
+                  georgian += 1
+              has_ref = n.REFUSAL.search(text)
+              if has_ref and n.mentions_cooperation(text):
+                  coop += 1
+                  print("НАДСИЛАТИ (є співпраця):", mask(has_ref.group(0)))
+              elif has_ref:
+                  refused += 1
+                  print("ВІДСІЯТИ:", mask(has_ref.group(0)))
+          print(f"усього {len(items)}; з грузинським текстом {georgian}; без опису {short}; "
+                f"відсіяти {refused}; відмова, але є співпраця {coop}")
+          PY
