@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Робить watcher.py для Тбілісі з watcher.py бота Батумі (myhome-watcher).
+Робить watcher.py для Тбілісі з watcher.py бота Батумі (myhome_batumi, до 12.10.2026 — myhome-watcher).
 
 Код Тбілісі — копія батумського; відрізняються лише рядки з таблиці REPLACEMENTS нижче:
-назва міста, мова повідомлень у Telegram і фільтр «не сотрудничаю с риелторами», який є лише
-в Тбілісі (сама перевірка — у no_realtors.py, таблиця лише підключає її). У групі Тбілісі є
+назва міста, мова повідомлень у Telegram, фільтр «не сотрудничаю с риелторами», який є лише
+в Тбілісі (сама перевірка — у no_realtors.py, таблиця лише підключає її), і друга група для
+продажу (пошуки з «| sale» у searches.txt, як у боті ss.ge_tbilisi). У групі Тбілісі є
 учасник, який не знає української, тож усе, що бот пише в групу, — російською. Журнал запусків і коментарі в
 коді лишаються українськими, як у Батумі.
 
-  python sync_from_batumi.py ../myhome-watcher/watcher.py
+  python sync_from_batumi.py ../myhome_batumi/watcher.py
 
 Скрипт перезаписує watcher.py поруч із собою. Якщо в батумському коді якийсь рядок
 змінився і заміна не знайшлася (або знайшлася не стільки разів, скільки очікувалось), —
@@ -23,8 +24,8 @@ REPLACEMENTS = [
     # ── місто ──
     ("Оберіть на сайті Батумі, застосуйте",
      "Оберіть на сайті Тбілісі, застосуйте", 1),
-    ("объявления об аренде квартиры в Батуми.",
-     "объявления об аренде квартиры в Тбилиси.", 1),
+    ("объявления об аренде квартиры в Батуми.",  # у Тбілісі ще будинки, комерція й продаж
+     "объявления о недвижимости в Тбилиси.", 1),
 
     # ── повідомлення з оголошенням — російською ──
     ("or 'Нове оголошення'}",
@@ -88,6 +89,103 @@ REPLACEMENTS = [
      "                delivered = True\n"
      "            elif telegram_ready():\n"
      "                delivered = send_listing(item, label, count)\n", 1),
+
+    # ── лише Тбілісі: продаж — в окрему групу (як у ss.ge_tbilisi) ──
+    # Пошук у searches.txt з третьою частиною «| sale» шле в чат TELEGRAM_CHAT_ID_SALE, решта —
+    # в основну групу. Рядки нижче накладаються після попередніх (тексти вже російські).
+    ("TELEGRAM_CHAT_ID = os.getenv(\"TELEGRAM_CHAT_ID\", \"\")  # кілька чатів — через кому\n",
+     "TELEGRAM_CHAT_ID = os.getenv(\"TELEGRAM_CHAT_ID\", \"\")  # кілька чатів — через кому\n"
+     "# Інші групи: пошук у searches.txt з третьою частиною «| sale» іде в чат з TELEGRAM_CHAT_ID_SALE\n"
+     "# (у telegram.json — \"chat_id_sale\"). Без нього такий пошук пропускається, в основну групу не йде.\n", 1),
+    ("    global TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, OPENAI_API_KEY\n",
+     "    global TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, OPENAI_API_KEY, FILE_GROUP_CHATS\n", 1),
+    ("    OPENAI_API_KEY = OPENAI_API_KEY or str(cfg.get(\"openai_key\") or \"\").strip()\n"
+     "\n"
+     "\n"
+     "load_telegram_file()\n",
+     "    OPENAI_API_KEY = OPENAI_API_KEY or str(cfg.get(\"openai_key\") or \"\").strip()\n"
+     "    FILE_GROUP_CHATS = {k[len(\"chat_id_\"):].lower(): str(v or \"\").strip()\n"
+     "                        for k, v in cfg.items() if k.startswith(\"chat_id_\")}\n"
+     "\n"
+     "\n"
+     "FILE_GROUP_CHATS = {}  # chat_id інших груп з telegram.json: {\"sale\": \"-100…\"}\n"
+     "load_telegram_file()\n", 1),
+    ("        label, url = (\"\", line)\n"
+     "        if \"|\" in line:\n"
+     "            label, url = (part.strip() for part in line.split(\"|\", 1))\n"
+     "        if \"myhome.ge\" not in url:\n"
+     "            continue  # рядок-заглушка або щось стороннє\n"
+     "        searches.append((label or \"myhome.ge\", url))\n",
+     "        parts = [part.strip() for part in line.split(\"|\")]\n"
+     "        if len(parts) == 1:  # лише посилання, без назви\n"
+     "            parts.insert(0, \"\")\n"
+     "        label, url, group = (parts + [\"\"])[:3]\n"
+     "        if \"myhome.ge\" not in url:\n"
+     "            continue  # рядок-заглушка або щось стороннє\n"
+     "        if group and not re.fullmatch(r\"[A-Za-z0-9_]+\", group):\n"
+     "            raise ConfigError(f\"назва групи «{group}» — лише латинські літери, цифри й _ (наприклад, sale)\")\n"
+     "        searches.append((label or \"myhome.ge\", url, group.lower()))\n", 1),
+    ("def chat_ids():\n"
+     "    return [c.strip() for c in str(TELEGRAM_CHAT_ID).split(\",\") if c.strip()]\n"
+     "\n"
+     "\n"
+     "def telegram_ready():\n"
+     "    return bool(TELEGRAM_BOT_TOKEN and chat_ids())\n",
+     "def chat_ids(group=\"\"):\n"
+     "    \"\"\"Чати групи: основна — TELEGRAM_CHAT_ID, інша (sale) — TELEGRAM_CHAT_ID_SALE.\"\"\"\n"
+     "    raw = (os.getenv(f\"TELEGRAM_CHAT_ID_{group.upper()}\") or FILE_GROUP_CHATS.get(group, \"\")\n"
+     "           if group else TELEGRAM_CHAT_ID)\n"
+     "    return [c.strip() for c in str(raw).split(\",\") if c.strip()]\n"
+     "\n"
+     "\n"
+     "def telegram_ready(group=\"\"):\n"
+     "    return bool(TELEGRAM_BOT_TOKEN and chat_ids(group))\n", 1),
+    ("def send_text(text):\n"
+     "    for chat in chat_ids():\n",
+     "def send_text(text, group=\"\"):\n"
+     "    for chat in chat_ids(group):\n", 1),
+    ("def send_listing(item, label, count):\n"
+     "    \"\"\"Надсилає оголошення у всі чати. True, якщо дійшло хоча б в один.\"\"\"\n",
+     "def send_listing(item, label, count, group=\"\"):\n"
+     "    \"\"\"Надсилає оголошення у всі чати групи. True, якщо дійшло хоча б в один.\"\"\"\n", 1),
+    ("    delivered = False\n"
+     "    for chat in chat_ids():\n",
+     "    delivered = False\n"
+     "    for chat in chat_ids(group):\n", 1),
+    ("    for label, url in searches:\n",
+     "    for label, url, group in searches:\n"
+     "        if group and telegram_ready() and not telegram_ready(group):\n"
+     "            log(f\"[{label}] не задано чат групи «{group}» (секрет TELEGRAM_CHAT_ID_{group.upper()}) — \"\n"
+     "                \"пропускаю пошук\")\n"
+     "            continue\n", 1),
+    ("            if telegram_ready():\n"
+     "                send_text(f\"✅ Слежу за поиском",
+     "            if telegram_ready(group):\n"
+     "                send_text(f\"✅ Слежу за поиском", 1),
+    ("\"объявлений запомнил — буду присылать только новые.\")",
+     "\"объявлений запомнил — буду присылать только новые.\", group)", 1),
+    ("candidates.append((label, item))",
+     "candidates.append((label, group, item))", 1),
+    ("candidates.sort(key=lambda c: int(c[1][\"id\"]), reverse=True)",
+     "candidates.sort(key=lambda c: int(c[2][\"id\"]), reverse=True)", 1),
+    ("    for label, item in candidates:\n",
+     "    for label, group, item in candidates:\n", 1),
+    ("            elif telegram_ready():\n"
+     "                delivered = send_listing(item, label, count)\n",
+     "            elif telegram_ready(group):\n"
+     "                delivered = send_listing(item, label, count, group)\n", 1),
+    ("    label, url = load_searches()[0]\n"
+     "    params = search_params(url)\n",
+     "    label, url, group = load_searches()[0]\n"
+     "    params = search_params(url)\n", 1),
+    ("    if telegram_ready():\n"
+     "        ok = send_listing(item, f\"🧪 ТЕСТ · {label}\", 0)\n",
+     "    if telegram_ready(group):\n"
+     "        ok = send_listing(item, f\"🧪 ТЕСТ · {label}\", 0, group)\n", 1),
+    ("    label, url = load_searches()[0]\n"
+     "    raw_list = ",
+     "    label, url, _ = load_searches()[0]\n"
+     "    raw_list = ", 1),
 ]
 
 
