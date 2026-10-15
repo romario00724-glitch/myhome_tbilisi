@@ -97,13 +97,13 @@ REPLACEMENTS = [
      "TELEGRAM_CHAT_ID = os.getenv(\"TELEGRAM_CHAT_ID\", \"\")  # кілька чатів — через кому\n"
      "# Інші групи: пошук у searches.txt з третьою частиною «| sale» іде в чат з TELEGRAM_CHAT_ID_SALE\n"
      "# (у telegram.json — \"chat_id_sale\"). Без нього такий пошук пропускається, в основну групу не йде.\n", 1),
-    ("    global TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, OPENAI_API_KEY\n",
-     "    global TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, OPENAI_API_KEY, FILE_GROUP_CHATS\n", 1),
-    ("    OPENAI_API_KEY = OPENAI_API_KEY or str(cfg.get(\"openai_key\") or \"\").strip()\n"
+    ("    global TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ANTHROPIC_API_KEY\n",
+     "    global TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, ANTHROPIC_API_KEY, FILE_GROUP_CHATS\n", 1),
+    ("    ANTHROPIC_API_KEY = ANTHROPIC_API_KEY or str(cfg.get(\"anthropic_key\") or \"\").strip()\n"
      "\n"
      "\n"
      "load_telegram_file()\n",
-     "    OPENAI_API_KEY = OPENAI_API_KEY or str(cfg.get(\"openai_key\") or \"\").strip()\n"
+     "    ANTHROPIC_API_KEY = ANTHROPIC_API_KEY or str(cfg.get(\"anthropic_key\") or \"\").strip()\n"
      "    FILE_GROUP_CHATS = {k[len(\"chat_id_\"):].lower(): str(v or \"\").strip()\n"
      "                        for k, v in cfg.items() if k.startswith(\"chat_id_\")}\n"
      "\n"
