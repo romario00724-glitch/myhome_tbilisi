@@ -14444,6 +14444,10 @@
 2,
 "2026-10-18"
 ],
+"u:746696": [
+1,
+"2026-10-19"
+],
 "u:748498": [
 2,
 "2026-10-19"
@@ -18005,7 +18009,7 @@
 "2026-10-19"
 ]
 },
-"fail_streak": 1,
+"fail_streak": 0,
 "regular_seeded": [
 "cities=1&currency_id=2&deal_types=2&owner_type=physical&price_from=350&real_estate_types=1",
 "cities=1&currency_id=2&deal_types=2&owner_type=physical&price_from=600&real_estate_types=5",
@@ -23139,6 +23143,7 @@
 25989678,
 26043913,
 26173978,
+26333602,
 26382601,
 26382602,
 26382603,
