@@ -297,7 +297,7 @@ def is_paid(item):
     return any(item.get(k) for k in ("is_super_vip", "is_vip_plus", "is_vip"))
 
 
-DETAIL_FIELDS = ("user_id", "user_phone_number", "additional_phone_number", "user_title",
+DETAIL_FIELDS = ("user_id", "user_phone_number", "additional_phone_number", "user_title", "owner_name",
                  "floor", "total_floors", "created_at", "create_date", "last_updated", "address")
 
 
@@ -422,13 +422,35 @@ NEGATION_AFTER = re.compile(
     r"|(?:არ|ნუ)\W|გარეშე)",
     re.IGNORECASE)
 JOINED = re.compile(r"^\W*(?:и|і|й|та|или|або|and|or)?\W*$", re.IGNORECASE)  # «с агентствами и риелторами»
-# Автор прямо називає себе агентом — це вже не підозра, а факт (SKIP_SELF_DECLARED_AGENTS)
-SELF_AGENT_WORD = r"(?:агент(?:ом)?|агентство|риелтор(?:ом)?|риэлтор(?:ом)?|рієлтор(?:ом)?|маклер(?:ом)?|брокер(?:ом)?)\b"
-SELF_AGENT = re.compile(  # «я агент», «являюсь агентом»; але не «я агентствам не сдаю», «я не агент»
-    r"\bя\W+(?:являюсь\W+|-\W*)?" + SELF_AGENT_WORD +
-    r"|\bявляюсь\W+" + SELF_AGENT_WORD +
+# Автор прямо називає себе агентом — це вже не підозра, а факт (SKIP_SELF_DECLARED_AGENTS).
+# Після «я» / «мы» — називний відмінок, після «являюсь» / «являемся» — орудний: інакше
+# «я агентом не являюсь» і «мы агентами не являемся» теж виглядали б як зізнання.
+SELF_AGENT_WORD = r"(?:агент|агентство|риелтор|риэлтор|рієлтор|маклер|брокер)\b"
+SELF_AGENT_WORD_INS = r"(?:агентом|агентством|риелтором|риэлтором|рієлтором|маклером|брокером)\b"
+SELF_AGENTS_WORD = (r"(?:агентство|агенты|риелторы|риэлторы|маклеры|брокеры"
+                    r"|агенція|агенти|рієлтори|маклери|брокери)\b")
+SELF_AGENTS_WORD_INS = r"(?:агентством|агентами|риелторами|риэлторами|маклерами|брокерами)\b"
+SELF_AGENT = re.compile(  # «я агент», «мы агентство»; але не «я агентствам не сдаю», «не являюсь агентом»
+    r"\bя\W+(?:-\W*)?" + SELF_AGENT_WORD +
+    r"|(?<!не )\bявляюсь\W+" + SELF_AGENT_WORD_INS +
+    r"|\b(?:мы|ми)\W+(?:-\W*)?" + SELF_AGENTS_WORD +                              # «Мы агентство», «мы — риелторы»
+    r"|(?<!не )\bявляемся\W+" + SELF_AGENTS_WORD_INS +
+    r"|\b(?:наше|наша)\W+(?:агентство|агенція)\b"
     r"|\bi(?:\W+am|'m)\W+(?:an?\W+)?(?:real\W+estate\W+)?(?:agent|realtor|broker)\b"
-    r"|(?<!არ )\bვარ\W+(?:აგენტი|რიელტორი|მაკლერი|ბროკერი)\b|(?:აგენტი|რიელტორი|მაკლერი|ბროკერი)\W+ვარ\b",
+    r"|\bwe(?:\W+are|'re)\W+(?:an?\W+)?(?:real\W+estate\W+)?(?:agency|agents|realtors|brokers)\b"
+    r"|\bour\W+(?:real\W+estate\W+)?agency\b"
+    r"|(?<!არ )\bვარ\W+(?:აგენტი|რიელტორი|მაკლერი|ბროკერი)\b|(?:აგენტი|რიელტორი|მაკლერი|ბროკერი)\W+ვარ\b"
+    r"|(?<!არ )\bვართ\W+(?:სააგენტო|აგენტები|რიელტორები|მაკლერები|ბროკერები)\b"   # «ჩვენ ვართ სააგენტო»
+    r"|(?:სააგენტო|აგენტები|რიელტორები|მაკლერები|ბროკერები)\W+ვართ\b"
+    r"|\bჩვენი\W+სააგენტო\b",
+    re.IGNORECASE)
+# Ім'я профілю саме називає автора агентом («აგენტი» — «агент» грузинською, «სააგენტო» — «агентство»,
+# «Agent», «Риелтор»). Слово цілком, тож прізвище «Агентов» чи «Magenta» не спрацьовує; «без агентства»,
+# «no agents» відсікає agent_name. Як у myhome_batumi (там з 18.10.2026).
+AGENT_NAME = re.compile(
+    r"\b(?:agents?|agency|agencies|realtors?|brokers?)\b"
+    r"|\b(?:агент(?:ы|а|у|ом)?|агентств\w*|(?:риелтор|риэлтор|рієлтор|маклер|брокер)(?:ы|и|а|у|ом)?)\b"
+    r"|\b(?:სა)?აგენტ\w*|\b(?:რიელტორ|მაკლერ|ბროკერ)\w*",
     re.IGNORECASE)
 
 
@@ -451,8 +473,22 @@ def text_signals(text):
 
 
 def self_declared_agent(item):
-    """Автор сам пише в описі, що він агент («я агент», «являюсь агентом», «I am an agent»)."""
+    """Автор сам пише в описі, що він агент («я агент», «мы агентство», «I am an agent»)."""
     return bool(SELF_AGENT.search(plain_text(item.get("comment")) + " " + str(item.get("_ru_comment") or "")))
+
+
+def agent_name(item):
+    """Ім'я автора в профілі — слово «агент» («აგენტი», «სააგენტო», «Agent», «Риелтор»…): True, якщо так.
+
+    Ім'я у видачі — `user_title`, у картці — `owner_name`. «Без агентства», «no agents», «не агент» — не те,
+    що треба: заперечення шукається так само, як в описі (text_signals). Перенесено з myhome_batumi 22.10.2026."""
+    for key in ("user_title", "owner_name"):
+        name = clean(item.get(key)).replace("_", " ")  # «Agent_Batumi»: підкреслення розділяє слова
+        for m in AGENT_NAME.finditer(name):
+            before, after = name[max(0, m.start() - 40):m.start()], name[m.end():m.end() + 60]
+            if not (NEGATION_BEFORE.search(before) or NEGATION_AFTER.search(after)):
+                return True
+    return False
 
 
 def phone_fingerprint(digits):
@@ -1035,13 +1071,19 @@ def run_once(state):
         elif SKIP_SELF_DECLARED_AGENTS and self_declared_agent(item):
             log(f"  пропускаю {item['id']}: автор сам пише в описі, що він агент")
             delivered = True
+        elif SKIP_SELF_DECLARED_AGENTS and agent_name(item):
+            log(f"  пропускаю {item['id']}: ім'я автора — слово «агент»")  # без імені: лог публічний
+            delivered = True
         elif SKIP_SUSPECTED_AGENTS and suspect >= AGENT_THRESHOLD:
             log(f"  пропускаю {item['id']}: у автора {suspect} оголошень")
             delivered = True
         else:
             if ANTHROPIC_API_KEY and TRANSLATE_ALERTS and time.time() < translate_deadline:
                 translate_listing(item)
-            if SKIP_NO_REALTORS and no_realtors.refuses_realtors(
+            if SKIP_SELF_DECLARED_AGENTS and item.get("_ru_comment") and self_declared_agent(item):
+                log(f"  пропускаю {item['id']}: автор сам пише в описі, що він агент (видно з перекладу)")
+                delivered = True
+            elif SKIP_NO_REALTORS and no_realtors.refuses_realtors(
                     plain_text(item.get("comment")) + " " + str(item.get("_ru_comment") or "")):
                 log(f"  пропускаю {item['id']}: автор пише, що не співпрацює з рієлторами")
                 delivered = True
