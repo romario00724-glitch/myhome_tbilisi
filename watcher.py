@@ -43,9 +43,9 @@ AI_MODEL = "claude-haiku-5-5"  # до 14.10.2026 — OpenAI gpt-5-mini
 
 LANG = "ru"                    # мова назв і посилань з myhome.ge: ru / en / ka
 ONLY_OWNERS = True             # завжди додавати фільтр «Власник» (owner_type=physical)
-REGULAR_PER_RUN = 48           # скільки щонайменше звичайних (не VIP) оголошень переглядати за запуск
-SEED_REGULAR = 120             # скільки звичайних оголошень «запам'ятати» при першому запуску пошуку
-MAX_PAGES_PER_RUN = 40         # запобіжник: більше сторінок одного пошуку за запуск не гортати
+REGULAR_PER_RUN = 24           # скільки щонайменше звичайних (не VIP) оголошень переглядати за запуск
+MAX_PAGES_PER_RUN = 5          # з 21.10.2026 myhome.ge показує гостям лише 5 сторінок видачі (далі — HTTP 500);
+                               # великі пошуки тому поділено за ціною в searches.txt
 FETCH_DETAILS = True           # догружати картку нового оголошення (телефон, автор)
 AGENT_THRESHOLD = 3            # від скількох оголошень в одного автора ставити позначку ⚠️
 SKIP_SUSPECTED_AGENTS = False  # True — такі оголошення взагалі не надсилати
@@ -292,7 +292,8 @@ def is_paid(item):
 
     У видачі myhome.ge платні завжди стоять першими — блоками Super VIP → VIP+ → VIP, кожен від
     свіжіших до старших, — і лише за ними звичайні; ні сортування, ні фільтра «без VIP» на сайті
-    немає (перевірено 15.10.2026). У «Аренда Тбилиси» платних ~116 (5 сторінок), у «Продажа Тбилиси» ~570 (24).
+    немає (перевірено 15.10.2026). У «Аренда Тбилиси» платних ~116 (5 сторінок), у «Продажа Тбилиси» ~500 (21).
+    З 21.10.2026 гостям видно лише 5 сторінок, тому ці два пошуки поділено за ціною (searches.txt).
     """
     return any(item.get(k) for k in ("is_super_vip", "is_vip_plus", "is_vip"))
 
@@ -915,7 +916,8 @@ def translate_listing(item):
 # ─────────────────────────────── база (state.json) ───────────────────────────────
 
 def new_state():
-    # regular_seeded — пошуки, які вже гортають повз платні оголошення (див. run_once)
+    # regular_seeded — пошуки, які вже гортають повз платні оголошення (див. run_once);
+    # announced — назви, для яких уже було «✅ Слежу…» (run_once додає його сам)
     return {"version": 1, "searches": {}, "seen": {}, "authors": {}, "fail_streak": 0, "regular_seeded": []}
 
 
@@ -970,6 +972,12 @@ def run_once(state):
     day = today()
     seen = seen_ids(state)
     candidates, batch, any_ok = [], set(), False
+    # «✅ Слежу…» — один раз на назву пошуку: поділені за ціною пошуки мають спільну назву. База до 22.10.2026
+    # цього не пам'ятала, а повідомлення для всіх нинішніх назв уже приходили.
+    if "announced" not in state:
+        state["announced"] = sorted({label for label, _, _ in searches}) if state["searches"] else []
+    announce = {}  # назва → [група, скільки запам'ятав]
+    labels = [label for label, _, _ in searches]
 
     for label, url, group in searches:
         if group and telegram_ready() and not telegram_ready(group):
@@ -981,23 +989,26 @@ def run_once(state):
         except ConfigError as e:
             log(f"[{label}] {e}")
             continue
+        name = label  # для журналу: пошуки з однаковою назвою розрізняє діапазон ціни
+        if labels.count(label) > 1:
+            prices = dict(params)
+            name = f"{label}, ціна {prices.get('price_from', '0')}–{prices.get('price_to', '…')}"
         key = urllib.parse.urlencode(sorted(params), safe=",")
         seeding = key not in state["searches"]
         # Пошук, засіяний до 15.10.2026, коли бот ще не гортав повз платні: звичайні оголошення, яких
         # він тоді не бачив, один раз тихо запам'ятовуємо — інакше прийшли б у групу пачкою.
         catching_up = not seeding and key not in state["regular_seeded"]
         quiet = seeding or catching_up
-        need = SEED_REGULAR if quiet else REGULAR_PER_RUN
 
-        # Гортаємо, доки не пройдемо всі платні (is_paid) і не переглянемо щонайменше need звичайних;
-        # у звичайному запуску — ще й доти, доки на сторінці трапляються незнайомі звичайні (бот пропустив
-        # кілька запусків). MAX_PAGES_PER_RUN — запобіжник.
+        # Гортаємо, доки не пройдемо всі платні (is_paid) і не переглянемо щонайменше REGULAR_PER_RUN
+        # звичайних, і далі — доки на сторінці трапляються незнайомі звичайні (бот пропустив кілька запусків).
+        # Тихий запуск запам'ятовує все, що сайт показує. Далі 5-ї сторінки myhome.ge гостей не пускає.
         found, ok, failed, regular = [], False, False, 0
         for page in range(1, MAX_PAGES_PER_RUN + 1):
             try:
                 items = fetch_page(params, page)
             except FetchError as e:
-                log(f"[{label}] сторінка {page}: {e}")
+                log(f"[{name}] сторінка {page}: {e}")
                 failed = True
                 break
             ok = True
@@ -1006,12 +1017,13 @@ def run_once(state):
             found.extend(items)
             fresh = [it for it in items if not is_paid(it)]
             regular += len(fresh)
-            if regular >= need and (quiet or all(int(it["id"]) in seen for it in fresh)):
+            if not quiet and regular >= REGULAR_PER_RUN and all(int(it["id"]) in seen for it in fresh):
                 break
             time.sleep(random.uniform(1.0, 2.0))
         else:
-            log(f"[{label}] {MAX_PAGES_PER_RUN} сторінок, а звичайних оголошень лише {regular} — "
-                "платних стало забагато?")
+            if regular < REGULAR_PER_RUN:
+                log(f"[{name}] на {MAX_PAGES_PER_RUN} сторінках лише {regular} звичайних оголошень, решта — "
+                    "платні, а далі сайт не показує: поділіть цей пошук за ціною дрібніше (searches.txt)")
         if not ok:
             continue
         any_ok = True
@@ -1026,19 +1038,17 @@ def run_once(state):
                     register_author(state, item, day)
                     added += not is_paid(item)
             if failed:  # не дочитали — наступного запуску ще раз тихо, інакше решта прийде пачкою
-                log(f"[{label}] не дочитав видачу: тихо запам'ятав {added} звичайних, "
+                log(f"[{name}] не дочитав видачу: тихо запам'ятав {added} звичайних, "
                     "решту — наступного запуску")
                 continue
             state["regular_seeded"].append(key)
             if catching_up:
-                log(f"[{label}] гортаю повз платні оголошення: тихо запам'ятав {added} звичайних, "
+                log(f"[{name}] гортаю повз платні оголошення: тихо запам'ятав {added} звичайних, "
                     "яких раніше не бачив")
                 continue
             state["searches"][key] = day
-            log(f"[{label}] перший запуск: запам'ятав {len(found)} оголошень, далі — лише нові")
-            if telegram_ready(group):
-                send_text(f"✅ Слежу за поиском «{html.escape(label)}». Текущие {len(found)} "
-                          "объявлений запомнил — буду присылать только новые.", group)
+            log(f"[{name}] перший запуск: запам'ятав {len(found)} оголошень, далі — лише нові")
+            announce.setdefault(label, [group, 0])[1] += len(found)
             continue
 
         for item in found:
@@ -1046,6 +1056,14 @@ def run_once(state):
             if listing_id not in seen and listing_id not in batch:
                 batch.add(listing_id)
                 candidates.append((label, group, item))
+
+    for label, (group, count) in announce.items():
+        if label in state["announced"]:
+            continue
+        state["announced"].append(label)
+        if telegram_ready(group):
+            send_text(f"✅ Слежу за поиском «{html.escape(label)}». Текущие {count} "
+                      "объявлений запомнил — буду присылать только новые.", group)
 
     update_fail_streak(state, any_ok)
     if not candidates:

@@ -19,14 +19,34 @@
 # секрету GitHub TELEGRAM_CHAT_ID_<НАЗВА>, а не в основну групу (TELEGRAM_CHAT_ID). «sale» — група
 # продажу «ss/myhome (Продажа)», секрет TELEGRAM_CHAT_ID_SALE (локально — "chat_id_sale" у
 # telegram.json). Кілька чатів — через кому. Поки секрету немає, бот такий пошук пропускає.
+#
+# З 21.10.2026 myhome.ge показує гостям лише 5 сторінок видачі (120 оголошень), а платні (VIP)
+# оголошення завжди стоять першими. Якщо платних у пошуку набирається під 120, бот не бачить
+# звичайних, тому такий пошук ділиться на кілька рядків з однаковою назвою за ціною
+# (price_from / price_to, межі включні: сусідні діапазони стикуються, наприклад ...price_to=80000 і
+# ...price_from=80000). Коли діапазон переповнюється, у журналі запуску з'являється «...лише N
+# звичайних оголошень... поділіть цей пошук за ціною дрібніше» — тоді розділити його ще надвоє.
+#
 # Приклад рядка:
 # Оренда | https://www.myhome.ge/ru/...?deal_types=2&real_estate_types=1&cities=...&owner_type=physical
 
-Аренда Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=1&cities=1&currency_id=2&price_from=350&owner_type=physical
+# «Аренда Тбилиси» поділено на 2 частини за ціною: myhome.ge показує лише 5 сторінок, а платних тут ~116
+Аренда Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=1&cities=1&currency_id=2&price_from=350&price_to=800&owner_type=physical
+Аренда Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=1&cities=1&currency_id=2&price_from=800&owner_type=physical
 Аренда коммерции Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=5&cities=1&currency_id=2&price_from=600&owner_type=physical
 Аренда домов Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=2&cities=1&currency_id=2&price_from=1000&owner_type=physical
 
 # Продаж — у групу «ss/myhome (Продажа)»
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&owner_type=physical | sale
+# «Продажа Тбилиси» поділено на 10 діапазонів ціни: платних тут ~500, а сайт показує лише 5 сторінок
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_to=50000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=50000&price_to=65000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=65000&price_to=80000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=80000&price_to=90000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=90000&price_to=100000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=100000&price_to=130000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=130000&price_to=150000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=150000&price_to=180000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=180000&price_to=300000&owner_type=physical | sale
+Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=300000&owner_type=physical | sale
 Продажа домов Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=2&cities=1&currency_id=2&price_from=100000&owner_type=physical | sale
 Продажа коммерции Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=5&cities=1&currency_id=2&price_from=50000&owner_type=physical | sale
