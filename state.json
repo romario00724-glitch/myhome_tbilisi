@@ -2256,6 +2256,10 @@
 2,
 "2026-10-17"
 ],
+"p:817093cc744f104c": [
+1,
+"2026-10-23"
+],
 "p:8171ca2b45896a25": [
 1,
 "2026-10-22"
@@ -4431,6 +4435,10 @@
 "p:fb9dcc5ef74f55e9": [
 1,
 "2026-10-14"
+],
+"p:fc0d87b54c42ce53": [
+1,
+"2026-10-23"
 ],
 "p:fc2ddf5fdc3f1d08": [
 1,
@@ -8084,6 +8092,10 @@
 1,
 "2026-10-13"
 ],
+"u:3074786": [
+1,
+"2026-10-23"
+],
 "u:3075074": [
 1,
 "2026-10-19"
@@ -8513,8 +8525,8 @@
 "2026-10-16"
 ],
 "u:3145835": [
-1,
-"2026-10-22"
+2,
+"2026-10-23"
 ],
 "u:3145974": [
 1,
@@ -8559,6 +8571,10 @@
 "u:3152528": [
 3,
 "2026-10-13"
+],
+"u:3154838": [
+1,
+"2026-10-23"
 ],
 "u:3156054": [
 3,
@@ -10668,6 +10684,10 @@
 1,
 "2026-10-14"
 ],
+"u:3607633": [
+1,
+"2026-10-23"
+],
 "u:3611709": [
 1,
 "2026-10-15"
@@ -11747,6 +11767,10 @@
 "u:3858451": [
 1,
 "2026-10-16"
+],
+"u:3864115": [
+1,
+"2026-10-23"
 ],
 "u:3866174": [
 1,
@@ -16317,7 +16341,7 @@
 "2026-10-18"
 ],
 "u:4808815": [
-2,
+3,
 "2026-10-23"
 ],
 "u:4808916": [
@@ -18880,6 +18904,10 @@
 1,
 "2026-10-15"
 ],
+"u:5509582": [
+1,
+"2026-10-23"
+],
 "u:5511197": [
 3,
 "2026-10-20"
@@ -20152,6 +20180,10 @@
 1,
 "2026-10-20"
 ],
+"u:689077": [
+1,
+"2026-10-23"
+],
 "u:689363": [
 1,
 "2026-10-15"
@@ -21071,6 +21103,10 @@
 "u:8695839": [
 1,
 "2026-10-15"
+],
+"u:8697013": [
+1,
+"2026-10-23"
 ],
 "u:8698135": [
 1,
@@ -25680,6 +25716,10 @@
 1,
 "2026-10-19"
 ],
+"u:9991751": [
+1,
+"2026-10-23"
+],
 "u:9991820": [
 7,
 "2026-10-22"
@@ -25852,12 +25892,16 @@
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=130000&price_to=150000&real_estate_types=1",
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=150000&price_to=180000&real_estate_types=1",
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=180000&price_to=300000&real_estate_types=1",
-"cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=300000&real_estate_types=1"
+"cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=300000&real_estate_types=1",
+"cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=100000&price_to=115000&real_estate_types=1",
+"cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=115000&price_to=130000&real_estate_types=1"
 ],
 "searches": {
 "cities=1&currency_id=1&deal_types=2&owner_type=physical&real_estate_types=1": "2026-10-10",
+"cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=100000&price_to=115000&real_estate_types=1": "2026-10-23",
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=100000&price_to=130000&real_estate_types=1": "2026-10-22",
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=100000&real_estate_types=2": "2026-10-13",
+"cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=115000&price_to=130000&real_estate_types=1": "2026-10-23",
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=130000&price_to=150000&real_estate_types=1": "2026-10-22",
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=150000&price_to=180000&real_estate_types=1": "2026-10-22",
 "cities=1&currency_id=2&deal_types=1&owner_type=physical&price_from=180000&price_to=300000&real_estate_types=1": "2026-10-22",
@@ -33596,6 +33640,7 @@
 26164719,
 26188503,
 26192549,
+26201580,
 26209774,
 26220986,
 26242024,
@@ -33608,11 +33653,16 @@
 26336165,
 26336585,
 26336987,
+26360958,
 26370559,
 26416132,
 26420080,
 26420771,
 26421398,
+26423102,
+26424977,
+26426060,
+26426121,
 26432672,
 26432692,
 26432695,
@@ -33782,7 +33832,11 @@
 26438115,
 26438126,
 26438141,
-26438204
+26438204,
+26438207,
+26438307,
+26438330,
+26438409
 ]
 },
 "version": 1
