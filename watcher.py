@@ -48,7 +48,8 @@ MAX_PAGES_PER_RUN = 5          # з 21.10.2026 myhome.ge показує гост
                                # великі пошуки тому поділено за ціною в searches.txt
 FETCH_DETAILS = True           # догружати картку нового оголошення (телефон, автор)
 AGENT_THRESHOLD = 3            # від скількох оголошень в одного автора ставити позначку ⚠️
-SKIP_SUSPECTED_AGENTS = False  # True — такі оголошення взагалі не надсилати
+SKIP_MANY_LISTINGS_FROM = 4    # з 23.10.2026: від скількох оголошень автора на myhome.ge не надсилати
+                               # (3 — ще надсилається з ⚠️; None — надсилати всіх)
 SKIP_SITE_AGENTS = True        # сайт сам позначив автора «Агент» — не надсилати (False — надсилати з ⚠️)
 SKIP_SELF_DECLARED_AGENTS = True  # автор сам пише в описі «я агент» — не надсилати (False — надсилати з ⚠️)
 SKIP_NO_REALTORS = True        # не надсилати, якщо автор пише «с агентствами не сотрудничаю»,
@@ -1082,7 +1083,7 @@ def run_once(state):
             enrich_with_details(item)
             time.sleep(random.uniform(0.5, 1.2))
         count = author_count(state, item)
-        suspect = max(count, item.get("_site_count") or 0)
+        site_count = item.get("_site_count") or 0
         if SKIP_SITE_AGENTS and is_site_agent(item):
             log(f"  пропускаю {item['id']}: на сайті автор позначений як «{site_user_type(item)}»")
             delivered = True
@@ -1092,8 +1093,8 @@ def run_once(state):
         elif SKIP_SELF_DECLARED_AGENTS and agent_name(item):
             log(f"  пропускаю {item['id']}: ім'я автора — слово «агент»")  # без імені: лог публічний
             delivered = True
-        elif SKIP_SUSPECTED_AGENTS and suspect >= AGENT_THRESHOLD:
-            log(f"  пропускаю {item['id']}: у автора {suspect} оголошень")
+        elif SKIP_MANY_LISTINGS_FROM and site_count >= SKIP_MANY_LISTINGS_FROM:
+            log(f"  пропускаю {item['id']}: оголошень автора на myhome.ge — {site_count}")
             delivered = True
         else:
             if ANTHROPIC_API_KEY and TRANSLATE_ALERTS and time.time() < translate_deadline:
