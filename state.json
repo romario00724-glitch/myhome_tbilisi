@@ -28217,7 +28217,7 @@
 "2026-10-25"
 ]
 },
-"fail_streak": 0,
+"fail_streak": 1,
 "regular_seeded": [
 "cities=1&currency_id=2&deal_types=2&owner_type=physical&price_from=350&real_estate_types=1",
 "cities=1&currency_id=2&deal_types=2&owner_type=physical&price_from=600&real_estate_types=5",
