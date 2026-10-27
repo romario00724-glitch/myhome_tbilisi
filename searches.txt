@@ -9,8 +9,8 @@
 #
 # deal_types: 2 — оренда, 1 — продаж; real_estate_types: 1 — квартира, 2 — приватний будинок,
 # 5 — комерція. Ціна «від» — currency_id=2&price_from=... (у доларах).
-# Зараз оренда: квартири від $350, будинки від $1000, комерція від $600; продаж: квартири без
-# порогу, будинки від $100 000, комерція від $50 000.
+# Зараз оренда: квартири від $350, будинки від $1000, комерція від $600. Продаж (квартири без
+# порогу, будинки від $100 000, комерція від $50 000) з 27.10.2026 вимкнено — див. нижче.
 #
 # Перед посиланням можна написати назву і « | » — вона буде видна в повідомленні
 # (група читає російською, тож і назва російською).
@@ -36,18 +36,21 @@
 Аренда коммерции Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=5&cities=1&currency_id=2&price_from=600&owner_type=physical
 Аренда домов Тбилиси | https://www.myhome.ge/ru/s/?deal_types=2&real_estate_types=2&cities=1&currency_id=2&price_from=1000&owner_type=physical
 
-# Продаж — у групу «ss/myhome (Продажа)»
+# Продаж — у групу «ss/myhome (Продажа)». З 27.10.2026 вимкнено (рішення користувача: група продажу
+# більше не потрібна), рядки лише закоментовано. Щоб повернути — спершу приберіть їхні ключі з
+# state.json (див. CLAUDE.md, «Історія», 27.10.2026), інакше перший запуск надішле пачкою все, що
+# з'явилось за час простою.
 # «Продажа Тбилиси» поділено на 11 діапазонів ціни: платних тут ~500, а сайт показує лише 5 сторінок
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_to=50000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=50000&price_to=65000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=65000&price_to=80000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=80000&price_to=90000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=90000&price_to=100000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=100000&price_to=115000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=115000&price_to=130000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=130000&price_to=150000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=150000&price_to=180000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=180000&price_to=300000&owner_type=physical | sale
-Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=300000&owner_type=physical | sale
-Продажа домов Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=2&cities=1&currency_id=2&price_from=100000&owner_type=physical | sale
-Продажа коммерции Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=5&cities=1&currency_id=2&price_from=50000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_to=50000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=50000&price_to=65000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=65000&price_to=80000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=80000&price_to=90000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=90000&price_to=100000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=100000&price_to=115000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=115000&price_to=130000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=130000&price_to=150000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=150000&price_to=180000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=180000&price_to=300000&owner_type=physical | sale
+# Продажа Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=1&cities=1&currency_id=2&price_from=300000&owner_type=physical | sale
+# Продажа домов Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=2&cities=1&currency_id=2&price_from=100000&owner_type=physical | sale
+# Продажа коммерции Тбилиси | https://www.myhome.ge/ru/s/?deal_types=1&real_estate_types=5&cities=1&currency_id=2&price_from=50000&owner_type=physical | sale
