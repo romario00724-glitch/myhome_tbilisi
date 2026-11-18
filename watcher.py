@@ -18,6 +18,7 @@ import hashlib
 import hmac
 import html
 import json
+import math
 import os
 import random
 import re
@@ -313,6 +314,17 @@ def to_int(value):
     return None
 
 
+def to_float(value):
+    """Число з поля сайту (int, float чи рядок із числом) або None."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
 def _walk(obj, path=""):
     if isinstance(obj, dict):
         for key, value in obj.items():
@@ -548,7 +560,42 @@ def fmt_area(value):
         return clean(value)
 
 
+# Долари, вписані як ларі (з 18.11.2026). myhome.ge якийсь час показує нове оголошення про продаж у ларі, хоча
+# автор мав на увазі долари: «71 000 ₾» (27 384 $), а за пів години — кілька годин та сама цифра стає доларами;
+# дехто лишається в ларі на дні. Хто перемикає — автор чи сайт — невідомо. Майже завжди це оголошення агентів
+# (їх бот не надсилає), у власників — приблизно одна картка на день (заміри 18.11.2026 — HISTORY.md).
+# Правило — як у бота ai_podbor_nedvizhimosti (`lari_slip`), але вужче: суму з поля «ларі» читаємо як долари,
+# лише коли за цією ціною в ларі квартира коштувала б від 300 до 1 000 $ за м² (у доларах це 780–2 600 $ за
+# м² — звичайна ціна в Тбілісі). Справжні ціни в ларі у власників — від 1 050 $ за м², а оренда, виставлена як
+# продаж («1 500 ₾»), — кілька десятків $ за м²: їх правило не чіпає. Будинки, комерція й оренда — як були.
+MYHOME_SALE = 1  # deal_type_id: 1 — продаж, 2 — оренда
+MYHOME_FLAT = 1  # real_estate_type_id: 1 — квартира, 2 — будинок, 5 — комерція
+MYHOME_GEL = 1   # currency_id: 1 — ларі, 2 — долари
+LARI_SLIP_USD_M2 = (300, 1000)  # «якби це справді були ларі, виходило б стільки $ за м²»: від (включно) і до
+
+
+def lari_slip(item):
+    """Сума з поля «ларі», яку слід читати як долари, або None."""
+    if to_int(item.get("currency_id")) != MYHOME_GEL:
+        return None
+    if to_int(item.get("deal_type_id")) != MYHOME_SALE or to_int(item.get("real_estate_type_id")) != MYHOME_FLAT:
+        return None
+    price = as_dict(item.get("price"))
+    gel = to_float(as_dict(price.get("1")).get("price_total"))
+    usd = to_float(as_dict(price.get("2")).get("price_total"))
+    area = to_float(item.get("area"))
+    if not gel or not usd or not area or gel <= usd:
+        return None
+    if round(usd) % 50 == 0:  # кругла сума в $: ціну задано в доларах, сайт лише показує її в ларі
+        return None
+    low, high = LARI_SLIP_USD_M2
+    return gel if low <= usd / area < high else None
+
+
 def price_text(item):
+    slip = lari_slip(item)
+    if slip:  # текст затверджено користувачем 18.11.2026 — той самий, що в ai_podbor_nedvizhimosti
+        return f"${fmt_num(slip)} ⚠️ на сайте пока указано {fmt_num(slip)} ₾ — похоже, автор перепутал валюту"
     price = as_dict(item.get("price"))
     gel = as_dict(price.get("1")).get("price_total")
     usd = as_dict(price.get("2")).get("price_total")
@@ -830,6 +877,9 @@ def send_listing(item, label, count, group=""):
     full_text = build_message(item, label, count)
     if not photos:
         log(f"  оголошення {item['id']}: на сайті немає фото")
+    slip = lari_slip(item)
+    if slip:  # щоб у журналі було видно, як часто спрацьовує правило «долари, вписані як ларі»
+        log(f"  оголошення {item['id']}: на сайті {fmt_num(slip)} ₾ — у картці читаю як долари")
     delivered = False
     for chat in chat_ids(group):
         result = send_photo(chat, photos, caption) if photos else {"ok": False}
